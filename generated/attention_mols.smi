@@ -1,0 +1,4 @@
+CC(=O)Oc1cc(C=Nc2ccccc2C(=O)NC(C)C(=O)Nc2ccc(C)cc2)cc(OC(C)=O)c1OC(C)=O
+CC1(C)C(=O)Nc2ccc(C(=O)Nc3ccc(Cl)c(C(=O)Nc4ccc(C(=O)O)cc4)c3)cc21
+Cc1ccc(C(=O)Nc2cccc(NC(=O)C=Cc3ccc(OCc4ccc(C(=O)O)cc4)cc3)c2)cc1
+CC(C)(C)c1ccc(C(=O)Nc2ccc(C(=O)NCC(=O)Nc3ccc(NC(=O)CC(=O)O)cc3)cc2)cc1

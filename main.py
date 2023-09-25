@@ -25,15 +25,19 @@ def run():
     # Implementation of the generation dynamics
     conditional_generation = generation_process(cfg_file)
     
-    
+    # Build and load the DL models 
     conditional_generation.load_models()
+    
+    # Apply RL to optimize the Generator towards USP7 inhibitors
+    conditional_generation.policy_gradient()
+    
+    
+    conditional_generation.compare_models()
     # conditional_generation.filter_promising_mols()
-    conditional_generation.drawMols()
+    # conditional_generation.drawMols()
     # conditional_generation.select_best_stereoisomers()
     # conditional_generation.samples_generation()
-    # conditional_generation.compare_models()
-    # conditional_generation.policy_gradient()
-    # gep_model.evaluate()
-    # gep_model.save()
+
+
 if __name__ == '__main__':
     run()
