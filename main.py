@@ -32,13 +32,22 @@ def run():
     conditional_generation.policy_gradient()
     conditional_generation.compare_models()
     
-    # Draws the chemical compounds of promising hit compounds
+    # Generates and saves a set of molecules from the optimized model 
+    conditional_generation.samples_generation()
+    
+    # Filters the most promising molecules according to their properties
+    conditional_generation.filter_promising_mols()
+    
+    # Selects the best stereoisomers for each promising molecule
+    conditional_generation.select_best_stereoisomers()
+    
+    # Draws the chemical 2D structure of promising hit compounds
     conditional_generation.drawMols()
     
-    # conditional_generation.filter_promising_mols()
 
-    # conditional_generation.select_best_stereoisomers()
-    # conditional_generation.samples_generation()
+
+    
+
 
 
 if __name__ == '__main__':

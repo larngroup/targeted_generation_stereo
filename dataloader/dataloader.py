@@ -11,8 +11,6 @@ from model.dnnQSAR_new import DnnQSAR_model
 # External
 from keras.models import Sequential
 import csv
-import openpyxl
-from pathlib import Path
 from rdkit import Chem
 from rdkit.Chem import Descriptors
 import pandas as pd
@@ -95,14 +93,14 @@ class DataLoader:
         df = pd.DataFrame()
             
     
-        paths_old_pred = [config.path_promising_hits ,"generated/sample_mols_oldpred_rl.smi","generated/sample_mols_newpred_rl.smi"]
+        paths_old_pred = [config.path_promising_hits]
         
         for fp_id,fp in enumerate(paths_old_pred):
             with open(fp, 'r') as csvFile:
                 reader = csv.reader(csvFile)
                 
                 it = iter(reader)
-                # next(it, None)  # skip first item.    
+   
                 for idx,row in enumerate(it):
                         
                     try:
@@ -145,9 +143,7 @@ class DataLoader:
         df['n_rings'] = n_rings 
         df['file_id']  = file_ids
         
-        df_1_2 = df[(df['file_id']==0) | (df['file_id']==1) ]
-        df_3 = df[df['file_id']==2]
-        return df_1_2,df_3
+        return df
     
     
         

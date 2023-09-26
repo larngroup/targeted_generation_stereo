@@ -9,8 +9,6 @@ Created on Fri Jul 30 16:49:39 2021
 from .base_model import BaseModel
 from dataloader.dataloader import DataLoader
 from utils.utils import Utils
-from model.Smiles_to_tokens import SmilesToTokens  
-from model.predictSMILES import *
 from model.generator import Generator  
 from utils.sascorer_calculator import SAscore
 from model.dnnQSAR import DnnQSAR_model
@@ -367,48 +365,29 @@ class generation_process(BaseModel):
         img = Draw.MolsToGridImage(drugs_mols, molsPerRow=3, subImgSize=(300,300),legends=legends)
         img.show()
         
-    def select_best_stereoisomers(self):  
-
+    def select_best_stereoisomers(self): 
+        """
+        Identifies the best isomeric configuration for each molecule of the 
+        input list
+        """
         
-        # df = DataLoader().load_promising_mols(self.config)
-        # # # sort predictions
-        # df_sorted = df.sort_values('pic50',ascending = False)
+        # Load a set of promising molecules 
+        df = DataLoader().load_promising_mols(self.config)
         
-        # smiles_sorted = df_sorted['smiles'].tolist()
+        # Sort molecules by pIC50 value
+        df_sorted = df.sort_values('pic50',ascending = False)
         
-        
-        
-        # smiles_sorted = ['CC(C)C1CCC2(C)CCC3(C)C(CCC4C5(C)CCC(O)C(C)(C)C5CCC43C)C12',
-                              # 'Cc1cccc(C)c1C(=O)NC1CCCNC1=O','CC1CCC(C)C12C(=O)Nc1ccccc12',
-                              # 'NC(Cc1ccc(O)cc1)C(=O)O','CC(=O)OCC(=O)C1(OC(C)=O)CCC2C3CCC4=CC(=O)CCC4(C)C3CCC21C',
-                              # 'CC(=O)NCC1CN(c2cc3c(cc2F)c(=O)c(C(=O)O)cn3C2CC2)C(=O)N1','CC1(C)CCC(C)(C)c2cc(C(=O)Nc3ccc(C(=O)O)cc3)ccc21','CC(=O)NCC1CN(c2cc3c(cc2F)c(=O)c(C(=O)O)cn3C2CC2)C(=O)N1',
-                              # 'CCC(c1ccccc1)c1ccc(OCCN(CC)CC)cc1','Cc1cccc(C)c1NC(=O)CN(C)C(=O)C(C)C','CC(C)C(CO)Nc1ccnc2cc(Cl)ccc12',
-                              # 'Cc1ccc(C(=O)Nc2ccc(C(C)C)cc2)cc1Nc1nccc(-c2ccc(C(F)(F)F)cc2)n1','CN(C)CCCNC(=O)CCC(=O)Nc1ccccc1',
-                              # 'CC(C)CC(=O)N(Cc1ccccc1)C1CCN(Cc2ccccc2)CC1']
-        
-        smiles_sorted = ['CC(C)C(=O)Nc1ccc(C(=O)Nc2ccc(S(C)(=O)=O)cc2)cc1',
-                         'Cc1cc(-c2ccccc2)c(C#N)c(=N)o1',
-                         'CC(CCC(=O)NC(C)(C)CC(=O)n1cc(C(N)=O)c2ccc(Cl)cc2c1=O)c1ccccc1',
-                         'C=CCC1CC(C)CC(C)(C)CCC12C(=O)C(C=C)C(C)(C)C2=O',
-                         'CN(C)C(OCCOC(=O)c1ccccc1)C(=O)Cn1cnc2ccccc2c1=O',
-                         'C=C(C)C1CCC2(C)CCC3(C)C(=CC(=O)C4C5(C)CCC(O)C(C)(C)C5CCC43C)C12'  ]        
-        
-        
+        # Extract a list of molecules
+        smiles_sorted = df_sorted['smiles'].tolist()
+                
         opts = StereoEnumerationOptions(tryEmbedding=True,unique=True,onlyStereoGroups = False)
 
         for idx,smi in enumerate(smiles_sorted):
-            print(smi)
+            # print(smi)
             mols_list = Utils.smiles2mol([smi])
             stereo_isomers = list(EnumerateStereoisomers(mols_list[0],options=opts))
             
-                   
             smiles_augmented = [Chem.MolToSmiles(stereo_mol) for stereo_mol in stereo_isomers]
-
-            # if len(smiles_augmented) <2:
-            #     keep_mols = stereo_isomers
-            #     keep_mols = Utils.smiles2mol(smiles_augmented)
-            
-            # else:
                 
             #prediction usp7 affinity
             prediction_usp7 = self.predictor_usp7.predict(smiles_augmented)
@@ -427,9 +406,7 @@ class generation_process(BaseModel):
                 DrawingOptions.atomLabelFontSize = 50
                 DrawingOptions.dotsPerAngstrom = 100
                 DrawingOptions.bondLineWidth = 3
-                                             
-
-                
+                       
                 legends = []
                 for i in keep_indices:
                      legends.append('pIC50 for USP7: ' + str(prediction_usp7[i]))
@@ -444,134 +421,61 @@ class generation_process(BaseModel):
     
         
         
-        
     def filter_promising_mols(self):
-        df1,df2 = DataLoader().load_promising_mols(self.config)
+        """
+        loads the most promising molecules, filters them according to the 
+        desired molecular properties and saves the result
+        """
+
+        df1 = DataLoader().load_promising_mols(self.config)
         
-        #  df1_filtered = df1[(df1['pic50']>7) & (df1['sas']<4.5) & (df1['logp']>0)
-        #                  & (df1['logp']<5.5) & (df1['qed']>0.15) & (df1['tpsa']<140)
-        #                  & (df1['hdonors']<7) & (df1['hacceptors']<15) & 
-        #                  (df1['rotable_bonds']<15) & (df1['n_rings']<5)]
+        df1_filtered = df1[(df1['pic50']>6.5) & (df1['sas']<4.5) & (df1['logp']>0)
+                          & (df1['logp']<5.5) & (df1['qed']>0.15) & (df1['tpsa']<140)
+                          & (df1['hdonors']<7) & (df1['hacceptors']<15) & 
+                          (df1['rotable_bonds']<15) & (df1['n_rings']<5)]
         
         df1_filtered = df1[(df1['pic50']>7)]
-        df2_filtered = df2[(df2['pic50']>6.7)]
-        df_all = df2_filtered+df1_filtered
         
          # # sort predictions
         df_all = df1_filtered.sort_values('pic50',ascending = False) 
         
         df_all = df_all[df_all.columns[0]]
+        
         # determining the name of the file
         file_path = 'filtered_hits_new.csv'
           
         # saving the excel
         df_all.to_csv(file_path,index=False)
-        
-        
-        
-        
-        
-        
-        
-                
-        # loaded_smiles = ['CC(C)C1CCC2(C)CCC3(C)C(CCC4C5(C)CCC(O)C(C)(C)C5CCC43C)C12',
-        #                  'CC(=O)OCC(=O)C1(OC(C)=O)CCC2C3CCC4=CC(=O)CCC4(C)C3CCC21C',
-        #                   'CC(=O)NCC1CN(c2cc3c(cc2F)c(=O)c(C(=O)O)cn3C2CC2)C(=O)N1']
-        
-        # mols_list = Utils.smiles2mol(loaded_smiles)
-        # # stereoisomers can differ in the biological affinity, synthetizability
-        # # and reactivity
-        
-        # opts = StereoEnumerationOptions(tryEmbedding=True,unique=True,onlyStereoGroups = False)
 
-        # stereo_isomers = [list(EnumerateStereoisomers(mol,options=opts)) for mol in mols_list]
-        
-        # filtered_stereo_isomers_all = {}
-        
-        # for idx,stereo_mols in enumerate(stereo_isomers):
-               
-        #     smiles_augmented = [Chem.MolToSmiles(mol) for mol in stereo_mols]
-
-        #     if len(smiles_augmented) <= 2:
-        #         keep_mols = stereo_mols
-        #         filtered_stereo_isomers_all[loaded_smiles[idx]] = smiles_augmented
-        #         keep_mols = Utils.smiles2mol(smiles_augmented)
-            
-        #     else:
-                
-        #         #prediction usp7 affinity
-        #         prediction_usp7 = self.predictor_usp7.predict(smiles_augmented)
-                
-        #         # sort and get the original indexes
-        #         out_arr = np.argsort(prediction_usp7)
-                
-        #         keep_indices = list(out_arr[-self.config.max_stereoisomers:])
-                
-        #         keep_smiles = [smiles_augmented[k_idx] for k_idx in keep_indices]
-                
-        #         keep_mols = Utils.smiles2mol(keep_smiles)
-        #         filtered_stereo_isomers_all[loaded_smiles[idx]] = keep_smiles
-                
-        #     if self.config.draw_mols == 'true':
-        #         # DrawingOptions.addStereoAnnotation = True
-        #         DrawingOptions.atomLabelFontSize = 50
-        #         DrawingOptions.dotsPerAngstrom = 100
-        #         DrawingOptions.bondLineWidth = 3
-                                             
-
-                
-        #         legends = []
-        #         for i in keep_indices:
-        #              legends.append('pIC50 for USP7: ' + str(prediction_usp7[i]))
-           
-        #         img1 = Draw.MolsToGridImage([mols_list[idx]], molsPerRow=1, subImgSize=(300,300))
-        #         img2 = Draw.MolsToGridImage(keep_mols, molsPerRow=3, subImgSize=(300,300))
-        #         img1.show()
-                
-        #         img2.show()
-        #         img1.save('generated\mols_canonical_' + str(idx) + '.png')
-        #         img2.save('generated\mols_stereoisomers_' + str(idx) + '.png')
-        
      
     def samples_generation(self):
-        
         """
-        Function to generate, draw and save molecules 
+        Generates, draws and saves molecules from the optimized policy 
         """
         
-        # self.generator_biased = DataLoader().load_generator(self.config,'biased')
+        self.generator_biased = DataLoader().load_generator(self.config,'biased')
         
-        # _,trajectory = self.generator_biased.generate(self.config.mols_to_generate)
+        _,trajectory = self.generator_biased.generate(self.config.mols_to_generate)
         
-        # smiles_biased = [smile[1:-1] for smile in trajectory]
+        smiles_biased = [smile[1:-1] for smile in trajectory]
         
-        # sanitized,valid = Utils.canonical_smiles(smiles_biased, sanitize=True, throw_warning=False) # validar 
+        sanitized,valid = Utils.canonical_smiles(smiles_biased, sanitize=True, throw_warning=False) # validar 
         
-        # sanitized_valid_repeated = []
+        sanitized_valid_repeated = []
         
-        # for smi in sanitized:
-        #     if len(smi)>1:
-        #         sanitized_valid_repeated.append(smi)
+        for smi in sanitized:
+            if len(smi)>1:
+                sanitized_valid_repeated.append(smi)
 
-        # sanitized_valid = list(set(sanitized_valid_repeated))
+        sanitized_valid = list(set(sanitized_valid_repeated))
         
-        # percentage_unq = (len(sanitized_valid)/len(sanitized_valid_repeated))*100
+        percentage_unq = (len(sanitized_valid)/len(sanitized_valid_repeated))*100
         
-        # vld = (valid/self.config.mols_to_generate)*100
+        vld = (valid/self.config.mols_to_generate)*100
         
-        # print("\nValid: ", vld)
-        # print("\nUnique: ", percentage_unq)
-        
-        
-        
-        
-        sanitized_valid = ['O=C(NCCOCCO)c1n(Cc2ccc(C(=O)N3CCC(CNC4C(=O)NC(=O)C4)CC3)cc2)c(C)cc1C',
-                           'O=C(NC(Cc1ccccc1)C)CC(CC(=O)Nc1c(OC)ccc(C(=O)NCc2ccc(C(=O)NN)cc2)c1)(C)C',
-                           'Clc1cc(C(=S)C(=O)c2c(CCc3ccc(C(=O)NCC(=O)N4OCCC(CO)C4)cc3)cccc2)ccc1',
-                           'FC(F)(F)c1ccc(-c2nc(Nc3c(C)ccc(C(=O)Nc4ccc(C(C)C)cc4)c3)ncc2)cc1',
-                           'Fc1c(N2C(=O)NC(CNC(=O)C)C2)cc2N(C3CC3)C=C(C(=O)[O-])C(=O)c2c1',
-                           'S([OH0])(Nc1ccc(C(=O)Nc2ccc(C(F)(F)F)cc2)cc1)([CH0](C)C)C']
-            
+        print("\nValid: ", vld)
+        print("\nUnique: ", percentage_unq)
+                    
         #prediction usp7 affinity
         prediction_usp7 = self.predictor_usp7.predict(sanitized_valid)
                
@@ -581,45 +485,13 @@ class generation_process(BaseModel):
 
         Utils.plot_hist(prediction_sas,self.config.mols_to_generate,valid,"sas")
         Utils.plot_hist(prediction_usp7,self.config.mols_to_generate,valid,"usp7")
-         
         
-        # if self.config.mols_to_draw > 0:
-        #     drawing = True
-            
-        #     DrawingOptions.atomLabelFontSize = 50
-        #     DrawingOptions.dotsPerAngstrom = 100
-        #     DrawingOptions.bondLineWidth = 3
-            
-        #     batch = 0
-        #     while drawing:
-        #         input_str = input("Press 'enter' to keep drawing mols: ")
-                
-        #         if len(input_str) == 0:
-                        
-    
-        #             ind = np.random.randint(0, len(mols_list), self.config.mols_to_draw)
-        #             mols_to_draw = [mols_list[i] for i in ind]
-                    
-        #             legends = []
-        #             for i in ind:
-        #                 legends.append('pIC50 for USP7: ' + str(round(prediction_usp7[i],2)))
-                    
-        #             img = Draw.MolsToGridImage(mols_to_draw, molsPerRow=1, subImgSize=(300,300), legends=legends)
-                        
-        #             img.show()
-        #             img.save('generated//mols_' + str(batch) +'.png')
-                    
-        #         else:
-        #             drawing = False
-        
-        with open("generated//sample_mols_newpred_rl.smi", 'w') as f:
+        with open(self.config.path_generated_mols, 'w') as f:
             f.write("Number of molecules: %s\n" % str(len(sanitized_valid)))
             f.write("Percentage of valid and unique molecules: %s\n\n" % str(vld))
             f.write("SMILES, pIC50, SAS, MW, logP, QED\n")
             for i,smi in enumerate(sanitized_valid):
                 mol = mols_list[i]
-                
-
                 q = QED.qed(mol)
                 mw, logP = Descriptors.MolWt(mol), Crippen.MolLogP(mol)
                 data = str(sanitized_valid[i]) + " ," +  str(np.round(prediction_usp7[i],2)) + " ," + str(np.round(prediction_sas[i],2)) + " ,"  + str(np.round(mw,2)) + " ," + str(np.round(logP,2)) + " ," + str(np.round(q,2))
