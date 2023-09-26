@@ -1,7 +1,7 @@
 {
 	"generator_unbiased_path": "models//generator//unbiased_generator.hdf5", 
 	"generator_biased_path": "models//generator//biased_generator_new.hdf5",
-	"predictor_path": "models//predictor//best_model_",
+	"predictor_path": "models//predictor//predictor_final.hdf5",
 	"file_path_predictor_data": "data/training_data_usp7.smi",
 	"path_generated_mols": "generated//sampled_mols.smi",  
 	"path_promising_hits": "generated/sampled_mols_best.smi",

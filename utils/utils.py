@@ -415,7 +415,7 @@ class Utils:
         This function implements the denormalization step.
         ----------
         predictions: Output from the model
-        data: q3 and q1 values to perform the denormalization
+        data: original labels to extract q1 and q3 values
         
         Returns
         -------
@@ -425,7 +425,6 @@ class Utils:
         q3_train = np.percentile(data, 90)
         
         for l in range(len(predictions)):
-
 
             for c in range(len(predictions[0])):
                 predictions[l,c] = (q3_train - q1_train) * predictions[l,c] + q1_train
@@ -578,7 +577,16 @@ class Utils:
         return threshold
 
     def serialize_model(generator_biased,config,pol):
-        generator_biased.model.save('models//generator//biased_generator_new.hdf5')
+        """
+        Takes the Generator and saves its parameters to disk
+        Parameters
+        ----------
+        generator_biased: Generator object
+        config: configuration file
+        pol: current training iteration              
+        """
+        
+        generator_biased.model.save('models//generator//biased_generator.hdf5')
         
         # model_json = generator_biased.model.to_json()
         # with open(config.model_name_biased + "_" +str(pol)+".json", "w") as json_file:
@@ -677,7 +685,6 @@ class Utils:
             x_label = "Predicted LogP"
             plot_title = "Distribution of predicted LogP for generated molecules"
             
-    #    sns.set(font_scale=1)
         sns.axes_style("darkgrid")
         ax = sns.kdeplot(prediction, shade=True,color = 'g')
         ax.set(xlabel=x_label,

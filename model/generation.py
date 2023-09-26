@@ -13,7 +13,7 @@ from model.Smiles_to_tokens import SmilesToTokens
 from model.predictSMILES import *
 from model.generator import Generator  
 from utils.sascorer_calculator import SAscore
-from model.dnnQSAR_new import DnnQSAR_model
+from model.dnnQSAR import DnnQSAR_model
 
 # external
 import tensorflow as tf
@@ -280,7 +280,6 @@ class generation_process(BaseModel):
         for smi in sanitized_unb:
             if len(smi)>1:
                 smiles_sanitized_valid_unb.append(smi)
-                
         
         #prediction usp7 affinity
         prediction_usp7_unb = self.predictor_usp7.predict(smiles_sanitized_valid_unb)
@@ -320,7 +319,7 @@ class generation_process(BaseModel):
         
     def drawMols(self):
         """
-        Function that draws the chemical structure of given compounds
+        Function that draws the chemical structure of given list of compounds
 
         Parameters:
         -----------
@@ -336,52 +335,32 @@ class generation_process(BaseModel):
         DrawingOptions.bondLineWidth = 3
         DrawingOptions.addStereoAnnotation = True  
         
-        # smiles_generated = ['CC(C)C1CCC2(C)CCC3(C)C(CCC4C5(C)CCC(O)C(C)(C)C5CCC43C)C12',
-        #                       'Cc1cccc(C)c1C(=O)NC1CCCNC1=O','CC1CCC(C)C12C(=O)Nc1ccccc12',
-        #                       'NC(Cc1ccc(O)cc1)C(=O)O','CC(=O)OCC(=O)C1(OC(C)=O)CCC2C3CCC4=CC(=O)CCC4(C)C3CCC21C',
-        #                       'CC(=O)NCC1CN(c2cc3c(cc2F)c(=O)c(C(=O)O)cn3C2CC2)C(=O)N1',
-        #                       'CC1(C)CCC(C)(C)c2cc(C(=O)Nc3ccc(C(=O)O)cc3)ccc21','CC(=O)NCC1CN(c2cc3c(cc2F)c(=O)c(C(=O)O)cn3C2CC2)C(=O)N1',
-        #                       'CCC(c1ccccc1)c1ccc(OCCN(CC)CC)cc1','Cc1cccc(C)c1NC(=O)CN(C)C(=O)C(C)C','CC(C)C(CO)Nc1ccnc2cc(Cl)ccc12',
-        #                       'Cc1ccc(C(=O)Nc2ccc(C(C)C)cc2)cc1Nc1nccc(-c2ccc(C(F)(F)F)cc2)n1','CN(C)CCCNC(=O)CCC(=O)Nc1ccccc1',
-        #                       'CC(C)CC(=O)N(Cc1ccccc1)C1CCN(Cc2ccccc2)CC1']
+        smiles_generated = ['CC(C)C1CCC2(C)CCC3(C)C(CCC4C5(C)CCC(O)C(C)(C)C5CCC43C)C12',
+                              'Cc1cccc(C)c1C(=O)NC1CCCNC1=O','CC1CCC(C)C12C(=O)Nc1ccccc12',
+                              'NC(Cc1ccc(O)cc1)C(=O)O','CC(=O)OCC(=O)C1(OC(C)=O)CCC2C3CCC4=CC(=O)CCC4(C)C3CCC21C',
+                              'CC(=O)NCC1CN(c2cc3c(cc2F)c(=O)c(C(=O)O)cn3C2CC2)C(=O)N1',
+                              'CC1(C)CCC(C)(C)c2cc(C(=O)Nc3ccc(C(=O)O)cc3)ccc21','CC(=O)NCC1CN(c2cc3c(cc2F)c(=O)c(C(=O)O)cn3C2CC2)C(=O)N1',
+                              'CCC(c1ccccc1)c1ccc(OCCN(CC)CC)cc1','Cc1cccc(C)c1NC(=O)CN(C)C(=O)C(C)C','CC(C)C(CO)Nc1ccnc2cc(Cl)ccc12',
+                              'Cc1ccc(C(=O)Nc2ccc(C(C)C)cc2)cc1Nc1nccc(-c2ccc(C(F)(F)F)cc2)n1','CN(C)CCCNC(=O)CCC(=O)Nc1ccccc1',
+                              'CC(C)CC(=O)N(Cc1ccccc1)C1CCN(Cc2ccccc2)CC1']
         
-        # known_drugs = ['C[C@@H]1[C@H]2C3=CC[C@@H]4[C@@]5(C)CC[C@H](O)C(C)(C)[C@@H]5CC[C@@]4(C)[C@]3(C)CC[C@@]2(C(=O)O)CC[C@H]1C',
-        #                'O=C1CCC(N2C(=O)c3ccccc3C2=O)C(=O)N1','CCC1(c2ccc(N)cc2)CCC(=O)NC1=O',
-        #                'CC(N)(Cc1ccc(O)cc1)C(=O)O','CC(=O)O[C@]1(C(C)=O)CC[C@H]2[C@@H]3C=C(C)C4=CC(=O)CC[C@]4(C)[C@H]3CC[C@@]21C',
-        #                'COc1c(N2C[C@@H]3CCCN[C@@H]3C2)c(F)cc2c(=O)c(C(=O)O)cn(C3CC3)c12',
-        #                'C=C(c1ccc(C(=O)O)cc1)c1cc2c(cc1C)C(C)(C)CCC2(C)C','O=C(O)c1cn(C2CC2)c2cc(N3CCNCC3)c(F)cc2c1=O',
-        #                'CCN(CC)CCOc1ccc(Cc2ccccc2)cc1', 'CCN(CC)CC(=O)Nc1c(C)cccc1C', 'CCN(CCO)CCCC(C)Nc1ccnc2cc(Cl)ccc12', 
-        #                'Cc1cn(-c2cc(NC(=O)c3ccc(C)c(Nc4nccc(-c5cccnc5)n4)c3)cc(C(F)(F)F)c2)cn1','O=C(CCCCCCC(=O)Nc1ccccc1)NO',
-        #                'CCC(=O)N(c1ccccc1)C1CCN(CCc2ccccc2)CC1']
+        known_drugs = ['C[C@@H]1[C@H]2C3=CC[C@@H]4[C@@]5(C)CC[C@H](O)C(C)(C)[C@@H]5CC[C@@]4(C)[C@]3(C)CC[C@@]2(C(=O)O)CC[C@H]1C',
+                        'O=C1CCC(N2C(=O)c3ccccc3C2=O)C(=O)N1','CCC1(c2ccc(N)cc2)CCC(=O)NC1=O',
+                        'CC(N)(Cc1ccc(O)cc1)C(=O)O','CC(=O)O[C@]1(C(C)=O)CC[C@H]2[C@@H]3C=C(C)C4=CC(=O)CC[C@]4(C)[C@H]3CC[C@@]21C',
+                        'COc1c(N2C[C@@H]3CCCN[C@@H]3C2)c(F)cc2c(=O)c(C(=O)O)cn(C3CC3)c12',
+                        'C=C(c1ccc(C(=O)O)cc1)c1cc2c(cc1C)C(C)(C)CCC2(C)C','O=C(O)c1cn(C2CC2)c2cc(N3CCNCC3)c(F)cc2c1=O',
+                        'CCN(CC)CCOc1ccc(Cc2ccccc2)cc1', 'CCN(CC)CC(=O)Nc1c(C)cccc1C', 'CCN(CCO)CCCC(C)Nc1ccnc2cc(Cl)ccc12', 
+                        'Cc1cn(-c2cc(NC(=O)c3ccc(C)c(Nc4nccc(-c5cccnc5)n4)c3)cc(C(F)(F)F)c2)cn1','O=C(CCCCCCC(=O)Nc1ccccc1)NO',
+                        'CCC(=O)N(c1ccccc1)C1CCN(CCc2ccccc2)CC1']
         
-        # legends = ['Ursolic acid', 'Thalidomide', 'Aminoglutethimide',
-        #            'Racemetyrosine', 'Megestrol acetate', 'Moxifloxacin',
-        #            'Bexarotene', 'Ciproflaxicin', 'Tesmilifene', 'Lidocaine', 
-        #            'Hydroxycloroquine', 'Nilotilib', 'Vorinostat', 'Fentanyl']
-        
-        
-        smiles_generated = ['CC(C)C(=O)Nc1ccc(C(=O)Nc2ccc(S(C)(=O)=O)cc2)cc1',
-                            'Cc1cc(-c2ccccc2)c(C#N)c(=N)o1',
-                            'C[C@H](CCC(=O)NC(C)(C)CC(=O)n1cc(C(N)=O)c2ccc(Cl)cc2c1=O)c1ccccc1',
-                            'C=CC[C@H]1C[C@@H](C)CC(C)(C)CC[C@]12C(=O)[C@@H](C=C)C(C)(C)C2=O',
-                            'CN(C)[C@H](OCCOC(=O)c1ccccc1)C(=O)Cn1cnc2ccccc2c1=O',
-                            'C=C(C)[C@@H]1CC[C@@]2(C)CC[C@]3(C)C(=CC(=O)[C@H]4[C@@]5(C)CC[C@H](O)C(C)(C)[C@H]5CC[C@@]43C)[C@H]12']
-        
-        known_drugs = ['CS(=O)(=O)c1ccc(NC(=O)c2cc([N+](=O)[O-])c(Sc3c(Cl)cncc3Cl)s2)cc1',
-                       'N#Cc1cc2c(cc1C#N)-c1ccccc1C2=O',
-                       'CC(CC(=O)N1CCC(O)(Cn2cnc3cc(Cl)ccc3c2=O)CC1)c1ccccc1',
-                       'O=C(C(C)=CC([C@H](C(C)=C)CC1)[C@]2([H])C1=C)C3=C2C([C@@](O)(C)C3)=O',
-                       'CC(Cc1ccccc1)C(=O)N1CCC(O)(Cn2cnc3ccccc3c2=O)CC1',
-                       'C[C@@H]1[C@H]2C3=CC[C@@H]4[C@@]5(C)CC[C@H](O)C(C)(C)[C@@H]5CC[C@@]4(C)[C@]3(C)CC[C@@]2(C(=O)O)CC[C@H]1C']
-        
-
-        
-        legends = ['1','2','3','4','5','6']
+        legends = ['Ursolic acid', 'Thalidomide', 'Aminoglutethimide',
+                    'Racemetyrosine', 'Megestrol acetate', 'Moxifloxacin',
+                    'Bexarotene', 'Ciproflaxicin', 'Tesmilifene', 'Lidocaine', 
+                    'Hydroxycloroquine', 'Nilotilib', 'Vorinostat', 'Fentanyl']
         
         generated_mols = Utils.smiles2mol(smiles_generated)
         drugs_mols = Utils.smiles2mol(known_drugs)
     
-
         img = Draw.MolsToGridImage(generated_mols, molsPerRow=3, subImgSize=(300,300))
         img.show()
         

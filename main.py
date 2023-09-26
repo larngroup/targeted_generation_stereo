@@ -30,11 +30,13 @@ def run():
     
     # Apply RL to optimize the Generator towards USP7 inhibitors
     conditional_generation.policy_gradient()
-    
-    
     conditional_generation.compare_models()
+    
+    # Draws the chemical compounds of promising hit compounds
+    conditional_generation.drawMols()
+    
     # conditional_generation.filter_promising_mols()
-    # conditional_generation.drawMols()
+
     # conditional_generation.select_best_stereoisomers()
     # conditional_generation.samples_generation()
 

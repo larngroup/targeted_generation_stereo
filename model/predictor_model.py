@@ -5,10 +5,13 @@ Created on Thu Mar  3 15:27:17 2022
 @author: tiago
 """
 import tensorflow as tf
-from tensorflow.keras.layers import LSTM, Dropout, Dense, Embedding, Input, GRU, Bidirectional,Concatenate
+from tensorflow.keras.layers import GRU
 from model.attention import Attention
 
 class Build_best_model(tf.keras.Model):
+    """
+    Predictor class model with the definition of the parameters and architecture
+    """
     
     def __init__(self, config):
         super(Build_best_model, self).__init__()

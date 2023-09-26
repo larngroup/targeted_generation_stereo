@@ -3,15 +3,17 @@
 # External 
 import tensorflow as tf
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import LSTM, Dropout, Dense, Embedding, Input, GRU, Bidirectional
+from tensorflow.keras.layers import LSTM, Dropout, Dense, Embedding 
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-#from livelossplot import PlotLossesKerasTF
-import os
 
 class Generator:
+    """
+    Generator model class with the definition of the parameters and architecture
+    """
+    
     def __init__(self,config,unbiased):
         self.tokens = ['H','Se','se','As','Si','Cl', 'Br','B', 'C', 'N', 'O', 'P', 
                   'S', 'F', 'I', '(', ')', '[', ']', '=', '#', '@', '*', '%', 
@@ -35,18 +37,14 @@ class Generator:
         self.epochs = self.config.epochs_generator
         self.batch_size = self.config.batch_size_generator
         
-
         self.optimizer = tf.keras.optimizers.RMSprop(learning_rate=0.001, rho=0.9, momentum=0.0, epsilon=1e-07, centered=False, name='RMSprop')
-            
 
         self.build()
-        
-        # folder = "Exp_"+str(self.units)+ "-" +str(self.epochs)+"-"+str(self.batch_size)+"-"+str(self.dropout_rate)+"-"+str(self.emb_dim)+"-"+str(self.config.sampling_temp)+"\\"
-
-
-
-        
+   
     def build(self):
+        """
+        Initializes the model
+        """
         self.model = Sequential()
 
 
@@ -67,15 +65,18 @@ class Generator:
         
 
     def load_model(self, path):
+        """
+        Loads the pre-trained model weights
+        """
         self.model.load_weights(path)
 
     def fit_model(self, dataX, dataY):
-        filename="weights-improvement-{epoch:02d}-{loss:.4f}.hdf5"
-        
-        
-        early_stop = EarlyStopping(monitor = "loss", patience=5)
+        """
+        Model pre-training step
+        """
 
-        
+        filename="weights-improvement-{epoch:02d}-{loss:.4f}.hdf5"  
+        early_stop = EarlyStopping(monitor = "loss", patience=5)
         path = self.path+F"{filename}"
         checkpoint = ModelCheckpoint(path, monitor = 'loss', verbose = 1, mode = 'min') 
         callbacks_list = [checkpoint, early_stop]#, PlotLossesKerasTF()]
@@ -94,7 +95,6 @@ class Generator:
     
     
     def sample_with_temp(self, preds):
-        
         """
         #samples an index from a probability array 'preds'
         preds: probabilities of choosing a character
@@ -117,9 +117,7 @@ class Generator:
 
         Parameters
         ----------
-        start_idx : TYPE int
-            DESCRIPTION. starting index, usually the one that corresponds to 'O'
-        numb : TYPE
+        numb : int
             DESCRIPTION. number of SMILES strings to be generated
 
         Returns
@@ -288,10 +286,7 @@ class Generator:
                       data_y[i,j] = dataX[i,j+1]
                   else:
                       data_y[i,j] = smiles_dict[self.tokens[-1]]
-                  
-          # dataY = [line[1:] for line in dataX]        #emb
-          # for i in range(len(dataY)):
-          #     dataY[i].append(self.char_to_int['A'])
+
      
           return data_y
         
